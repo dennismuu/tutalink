@@ -236,36 +236,30 @@ function db(): PDO
         return $pdo;
     }
 
-    $host = getenv('TUTALINK_DB_HOST') ?: '127.0.0.1';
-    $name = getenv('TUTALINK_DB_NAME') ?: 'tutalink';
-    $user = getenv('TUTALINK_DB_USER') ?: 'root';
-    $password = getenv('TUTALINK_DB_PASSWORD') ?: '';
-    $portValue = getenv('TUTALINK_DB_PORT');
+    // Use the exact variable names set in Vercel
+    $host = getenv('TIDB_HOST') ?: '127.0.0.1';
+    $name = getenv('TIDB_DB') ?: 'test';
+    $user = getenv('TIDB_USER') ?: 'root';
+    $password = getenv('TIDB_PASSWORD') ?: '';
+    $portValue = getenv('TIDB_PORT');
     $port = $portValue === false || $portValue === ''
-        ? 3306
+        ? 4000
         : filter_var($portValue, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 65535]]);
     if ($port === false) {
-        throw new RuntimeException('TUTALINK_DB_PORT must be a valid TCP port between 1 and 65535.');
+        throw new RuntimeException('TIDB_PORT must be a valid TCP port between 1 and 65535.');
     }
 
     $options = [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         PDO::ATTR_EMULATE_PREPARES => false,
+        // TiDB Serverless can have a cold start delay, give it up to 20 seconds
+        PDO::ATTR_TIMEOUT => 20, 
     ];
-    $sslCa = trim((string) (getenv('TUTALINK_DB_SSL_CA') ?: ''));
-    if ($sslCa !== '') {
-        if (!is_file($sslCa) || !is_readable($sslCa)) {
-            throw new RuntimeException('TUTALINK_DB_SSL_CA must point to a readable database CA certificate file.');
-        }
-        if (!defined('PDO::MYSQL_ATTR_SSL_CA') || !defined('PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT')) {
-            throw new RuntimeException('Enable PDO MySQL SSL support before configuring TUTALINK_DB_SSL_CA.');
-        }
-        $options[constant('PDO::MYSQL_ATTR_SSL_CA')] = $sslCa;
-        $options[constant('PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT')] = true;
-    }
 
     try {
+        // Note: TiDB Cloud requires SSL. We are not passing a CA file path here.
+        // PDO will use the system's default CA bundle, which works for TiDB.
         $pdo = new PDO(
             "mysql:host={$host};port={$port};dbname={$name};charset=utf8mb4",
             $user,
