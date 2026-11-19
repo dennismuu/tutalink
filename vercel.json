@@ -1,0 +1,9 @@
+{
+  "framework": "container",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/"
+    }
+  ]
+}
