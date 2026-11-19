@@ -258,14 +258,10 @@ function db(): PDO
     ];
 
     try {
-        // Note: TiDB Cloud requires SSL. We are not passing a CA file path here.
-        // PDO will use the system's default CA bundle, which works for TiDB.
-        $pdo = new PDO(
-            "mysql:host={$host};port={$port};dbname={$name};charset=utf8mb4",
-            $user,
-            $password,
-            $options
-        );
+        // TiDB Cloud requires SSL. sslmode=VERIFY_IDENTITY ensures the connection is encrypted.
+        $dsn = "mysql:host={$host};port={$port};dbname={$name};charset=utf8mb4;sslmode=VERIFY_IDENTITY";
+        
+        $pdo = new PDO($dsn, $user, $password, $options);
     } catch (PDOException $exception) {
         throw new RuntimeException(
             'The LertFind database is unavailable. Check the database host, port, credentials, and TLS configuration.',
