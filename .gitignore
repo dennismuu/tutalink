@@ -1,0 +1,7 @@
+.env
+.env.*
+!.env.example
+/lertfind-private/
+/vendor/
+/database/tutalink.sql
+*.log
