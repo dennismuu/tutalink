@@ -7,7 +7,7 @@ LertFind is a PHP 8.1+ and MySQL/MariaDB application for tutoring and home-servi
 1. Copy the project into `C:\xampp\htdocs\TUTALINK`.
 2. Start **Apache** and **MySQL** from the XAMPP Control Panel.
 3. Open phpMyAdmin at `http://localhost/phpmyadmin`, import `database/tutalink.sql`, and confirm the `tutalink` database was created.
-4. The default local connection is `127.0.0.1`, database `tutalink`, user `root`, and an empty password. For a different MySQL account, set `TUTALINK_DB_HOST`, `TUTALINK_DB_NAME`, `TUTALINK_DB_USER`, and `TUTALINK_DB_PASSWORD` in the Apache process environment before restarting Apache.
+4. The default local connection is `127.0.0.1:3306`, database `tutalink`, user `root`, and an empty password. For a different MySQL account, set `TUTALINK_DB_HOST`, `TUTALINK_DB_PORT`, `TUTALINK_DB_NAME`, `TUTALINK_DB_USER`, and `TUTALINK_DB_PASSWORD` in the Apache process environment before restarting Apache.
 5. From PowerShell, create the first administrator:
 
    ```powershell
@@ -29,7 +29,7 @@ The root `Dockerfile` builds this existing PHP application for a Docker host suc
 
 Build locally with `docker build -t tutalink .`. Run it with the required database and production settings supplied at runtime (never build secrets into the image), and mount persistent storage at `/var/lib/tutalink-private`. The `TUTALINK_PRIVATE_STORAGE_DIR` setting points document and revision-material storage there. The image intentionally excludes the database dump, local uploads, and environment files.
 
-Set `TUTALINK_ENV=production`, `TUTALINK_APP_URL` to the public HTTPS site URL, the `TUTALINK_DB_HOST`, `TUTALINK_DB_NAME`, `TUTALINK_DB_USER`, and `TUTALINK_DB_PASSWORD` values, `TUTALINK_PAYOUT_ENCRYPTION_KEY`, Paystack credentials, and mail sender settings in the host's runtime environment. Import and migrate the database separately. This image does not include an SMTP relay; configure a mail transport supported by the host before relying on verification or notification email.
+Set `TUTALINK_ENV=production`, `TUTALINK_APP_URL` to the public HTTPS site URL, the `TUTALINK_DB_HOST`, `TUTALINK_DB_PORT`, `TUTALINK_DB_NAME`, `TUTALINK_DB_USER`, and `TUTALINK_DB_PASSWORD` values, `TUTALINK_PAYOUT_ENCRYPTION_KEY`, Paystack credentials, and mail sender settings in the host's runtime environment. The database port defaults to `3306`. For TiDB Cloud or another MySQL-compatible service requiring TLS, make its CA certificate available to the container and set `TUTALINK_DB_SSL_CA` to the certificate's readable file path; the connection verifies the server certificate when this is set. Import and migrate the database separately. This image does not include an SMTP relay; configure a mail transport supported by the host before relying on verification or notification email.
 
 **Clever Cloud Docker storage limitation:** its Docker runtime does not support persistent volumes or FS Buckets. Uploaded provider documents and revision materials stored on the container filesystem will be lost on redeploy/replacement. Do not launch file-upload features on Clever Cloud Docker until storage is moved to persistent object storage (such as Clever Cloud Cellar) or you choose a runtime with persistent storage. The Docker image can be used on another Docker host with a persistent volume mounted at `/var/lib/tutalink-private`.
 

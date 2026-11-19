@@ -240,21 +240,41 @@ function db(): PDO
     $name = getenv('TUTALINK_DB_NAME') ?: 'tutalink';
     $user = getenv('TUTALINK_DB_USER') ?: 'root';
     $password = getenv('TUTALINK_DB_PASSWORD') ?: '';
+    $portValue = getenv('TUTALINK_DB_PORT');
+    $port = $portValue === false || $portValue === ''
+        ? 3306
+        : filter_var($portValue, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 65535]]);
+    if ($port === false) {
+        throw new RuntimeException('TUTALINK_DB_PORT must be a valid TCP port between 1 and 65535.');
+    }
+
+    $options = [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::ATTR_EMULATE_PREPARES => false,
+    ];
+    $sslCa = trim((string) (getenv('TUTALINK_DB_SSL_CA') ?: ''));
+    if ($sslCa !== '') {
+        if (!is_file($sslCa) || !is_readable($sslCa)) {
+            throw new RuntimeException('TUTALINK_DB_SSL_CA must point to a readable database CA certificate file.');
+        }
+        if (!defined('PDO::MYSQL_ATTR_SSL_CA') || !defined('PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT')) {
+            throw new RuntimeException('Enable PDO MySQL SSL support before configuring TUTALINK_DB_SSL_CA.');
+        }
+        $options[constant('PDO::MYSQL_ATTR_SSL_CA')] = $sslCa;
+        $options[constant('PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT')] = true;
+    }
 
     try {
         $pdo = new PDO(
-            "mysql:host={$host};dbname={$name};charset=utf8mb4",
+            "mysql:host={$host};port={$port};dbname={$name};charset=utf8mb4",
             $user,
             $password,
-            [
-                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                PDO::ATTR_EMULATE_PREPARES => false,
-            ]
+            $options
         );
     } catch (PDOException $exception) {
         throw new RuntimeException(
-            'The LertFind database is unavailable. Start MySQL in XAMPP, then import database/tutalink.sql in phpMyAdmin.',
+            'The LertFind database is unavailable. Check the database host, port, credentials, and TLS configuration.',
             0,
             $exception
         );
