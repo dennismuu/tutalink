@@ -12,4 +12,4 @@ LertFind is a PHP 8.1+ and MySQL/MariaDB application for tutoring and home-servi
 
    ```powershell
    cd C:\xampp\htdocs\TUTALINK
-   php scripts\create_super_admin.php
+   php scripts\create_super_  admin.php
