@@ -1,13 +1,9 @@
 FROM dunglas/frankenphp:1-php8.4-alpine
-
 WORKDIR /app
-
 RUN cp "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
-    && apk add --no-cache ca-certificates \
-    && update-ca-certificates \
     && install-php-extensions pdo_mysql \
     && printf '%s\n' \
-        ':{$PORT:80 {' \
+        ':{$PORT:80} {' \
         '    root * /app' \
         '    encode zstd gzip' \
         '    @private path /config.php /schema.sql /README.md /Dockerfile' \
@@ -15,9 +11,6 @@ RUN cp "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
         '    php_server' \
         '}' \
         > /etc/caddy/Caddyfile
-
 COPY . /app
-
 ENV PORT=80
-
 CMD ["frankenphp", "run", "--config", "/etc/caddy/Caddyfile"]
