@@ -7,7 +7,7 @@ RUN cp "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
     && update-ca-certificates \
     && install-php-extensions pdo_mysql \
     && printf '%s\n' \
-        ':{$PORT:80 {' \
+        ':{$PORT:80} {' \
         '    root * /app' \
         '    encode zstd gzip' \
         '    @private path /config.php /schema.sql /README.md /Dockerfile' \
